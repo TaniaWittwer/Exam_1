@@ -1,0 +1,3 @@
+"0","join <- left_join(predictor_1, conviction, by = ""id"")
+"
+"2","Column `id` has different attributes on LHS and RHS of join"

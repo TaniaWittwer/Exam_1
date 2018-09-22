@@ -1,0 +1,4 @@
+"0","predictors_1 <- "
+"0","  delinquency %>% "
+"0","  select(v4, v53, v62, v63, v69, v83, v89, v91, v93, v96, v104, v105, v117, v118, v119, v123, v125, v134, v137, v138, v155)"
+"0","predictor_1 <- rename(predictors_1, id = v4, conduct = v53, disc_dad = v62, disc_mum = v63, familysize = v69, housecare = v83, betw_parents = v89, educ_interest = v91, intake = v93, job_dad = v96, nervousness = v104, friends = v105, withdrawn = v117, attitude_dad = v118, iq = v119, phys_neglect = v123, popularity = v125, broken_home = v134, sibl_disturb = v137, socioeco_fam = v138, attendance = v155)"

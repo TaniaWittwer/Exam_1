@@ -1,0 +1,60 @@
+---
+title: "R Notebook Exam_1"
+output: html_notebook
+---
+
+Loading packages
+```{r}
+install.packages("pacman")
+library(pacman)
+p_load(tidyverse, haven)
+```
+
+Load datafiles
+```{r}
+delinquency <- read_spss("Cambridge_delinquency_with_caseid.sav")
+conviction <- read_spss("conviction_data.sav")
+```
+
+QUESTION 1
+Create a data set from the data files containing the variables that you want to use in your analysis. In other words, all the variables you want to use to understand and model the early life predictors of criminality. You must include information about convictions at different ages in your data set i.e., you need to merge the two data files, and select the variables and cases you need for the later analysis. Rename variables so that they are identifiable and usable.  If you can do this programmatically i.e., use the tidyverse and other packages to manipulate the data files, and variable names, you will receive higher marks for this question. 
+
+If I well understood the question, we need to select variables which could be "early predictors of criminality". Therefore, I have only choosen variables collected before 10 years old, according the what have been found previously by XXX and XXX.
+Thus, chosen variables as potential predictors are the following: XX XX XX
+```{r}
+
+```
+
+In addition, variables on conviction were first selected to create a dichotomous binary variable: convicted vs non-convicted (without taking into account neither the age of conviction(s), nor the number of conviction)
+```{r}
+
+```
+
+Variable were then merge together in one file
+```{r}
+
+```
+
+Because the number of predictor still be huge, a first look is necessary in order to do a first sort.
+```{r}
+
+```
+
+We can seen that ...
+Therefore, the file have been reduced, removing the following variables XX XX XX, and variable hare been renamed
+```{r}
+
+```
+
+QUESTION 2
+Explore the data set, bearing in mind that our key question concerns what the early life determinants of criminality are.  What is worth exploring further, do you think?  Report several (but not too many!) graphs and tables – choose these prudently, and discuss each graph or table you include.  
+```{r}
+
+```
+
+QUESTION 3
+We wish to model the occurrence and extent of criminality in our participants on the basis of early life events or factors. Use all the considerations at your disposal (the description above, your data exploration in Question 2, your reading of the articles we have provided, etc.) to construct a statistical model, or even more than one model if you wish.  Interpret your model(s).  Write a function to assess the predictive accuracy of your model(s), test it, and apply it to your data
+```{r}
+
+```
+

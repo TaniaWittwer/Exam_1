@@ -1,0 +1,24 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1537256382624.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1803675317",
+    "id" : "AF21166D",
+    "lastKnownWriteTime" : 1537626016,
+    "last_content_update" : 1537626017158,
+    "path" : "~/Documents/Multivariate Stat R/Exams/Exam 1/Exam_1/Exam_1.Rmd",
+    "project_path" : "Exam_1.Rmd",
+    "properties" : {
+        "chunk_output_type" : "inline",
+        "cursorPosition" : "59,0",
+        "scrollLine" : "43",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

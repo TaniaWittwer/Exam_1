@@ -16,7 +16,7 @@
 "0","#merge two tables"
 "0","conviction_merge <- left_join(conviction3a, conviction3b, by = ""id"")"
 "0","#create a new binary variable as convicted versus never convicted, resulting on if not convicted as adult (=1) and as juvenile(=1), then not convicted (=1), otherwise convicted (=2)"
-"0","conviction_merge$convicted <- if_else(conviction_merge$as_adult == 1 & conviction_merge$as_juvenile == 1, 1, 2) "
+"0","conviction_merge$convicted <- if_else(conviction_merge$as_adult == 1 & conviction_merge$as_juvenile == 1, 1, 2)"
 "0","conviction_merge$convicted <- factor(conviction_merge$convicted,"
 "0","                              levels = c(1,2),"
 "0","                              labels = c(""never"", ""atleastonce""))"

@@ -143,53 +143,67 @@ conviction_full$id <- as.numeric(conviction_full$id)
 
 #have a look to the deliquency rate
 table(conviction_full$as_juvenile)
-ggplot(data = conviction_full, aes(x = convicted))+
-  geom_bar()
-ggplot(data = conviction_full, aes(x = as_adult))+
-  geom_bar()
-ggplot(data = conviction_full, aes(x = as_juvenile))+
-  geom_bar()
+#result is 327 (80%) of non delinquent and 84 (20%) delinguent in our sample
+```
 
-#explore the predictors
-pairs.panels(conviction_full)
-ggplot(data = conviction_full, aes(x = convicted))+
-  geom_bar()+
+
+
+```{r}
+#all variables have been explored, however only the most relevant (the one which will be included in the prediction model) will appear here
+ggplot(data = conviction_full, aes(x = as_juvenile))+
+  geom_bar(aes(y = ..prop.., group = 2))+
+  facet_wrap(~disc_dad)
+
+ggplot(data = conviction_full, aes(x = as_juvenile))+
+  geom_bar(aes(y = ..prop.., group = 2))+
+  facet_wrap(~disc_mum)
+
+ggplot(data = conviction_full, aes(x = as_juvenile))+
+  geom_bar(aes(y = ..prop.., group = 2))+
+  facet_wrap(~familysize)
+
+ggplot(data = conviction_full, aes(x = as_juvenile))+
+  geom_bar(aes(y = ..prop.., group = 2))+
   facet_wrap(~job_dad)
 
-table(conviction_full$as_juvenile, conviction_full$conduct) #not
-table(conviction_full$as_juvenile, conviction_full$disc_dad) #a voir
-table(conviction_full$as_juvenile, conviction_full$disc_mum) #a voir
-table(conviction_full$as_juvenile, conviction_full$familysize) #a voir
-table(conviction_full$as_juvenile, conviction_full$housecare) #nop
-table(conviction_full$as_juvenile, conviction_full$betw_parents) #nop
-table(conviction_full$as_juvenile, conviction_full$educ_interest) #nop
-table(conviction_full$as_juvenile, conviction_full$job_dad) #a voir
-table(conviction_full$as_juvenile, conviction_full$nervousness) #nop
-table(conviction_full$as_juvenile, conviction_full$friends) #yep
-table(conviction_full$as_juvenile, conviction_full$withdrawn) #a voir
-table(conviction_full$as_juvenile, conviction_full$attitude_dad) #to see
-table(conviction_full$as_juvenile, conviction_full$iq)#ok
-table(conviction_full$as_juvenile, conviction_full$phys_neglect) #nop
-table(conviction_full$as_juvenile, conviction_full$popularity) #a voir
-table(conviction_full$as_juvenile, conviction_full$sibl_disturb) #nop
-table(conviction_full$as_juvenile, conviction_full$socioeco_fam) #nop
-table(conviction_full$as_juvenile, conviction_full$attendance)#to see
+ggplot(data = conviction_full, aes(x = as_juvenile))+
+  geom_bar(aes(y = ..prop.., group = 2))+
+  facet_wrap(~iq)
 
+table(conviction_full$as_juvenile, conviction_full$friends)
+table(conviction_full$as_juvenile, conviction_full$withdrawn)
+table(conviction_full$as_juvenile, conviction_full$attitude_dad)
+table(conviction_full$as_juvenile, conviction_full$iq)
+table(conviction_full$as_juvenile, conviction_full$popularity)
+table(conviction_full$as_juvenile, conviction_full$attendance)
 ```
 
-We can seen that the file is 
-Therefore, the file have been reduced, removing the following variables XX XX XX, and variable hare been renamed
-```{r}
-#set seed and split for the model
-```
+I tried many ways, and I really do not know how to explore this dataset in a meaningful way. I wanted to do frequency tables (not one by one), some t-test and descriptive data, but after many (too much) hours for nothing, I gave up. I will then just admit on some non-scientific non-related graphs and tables that the variables presented here are the one I kept, without further explanations.
+
 
 ```{r}
+#create the final dataset for the predictor model
+final_delinquency <-
+  conviction_full %>% 
+  select(as_juvenile, disc_dad, disc_mum, familysize, job_dad, friends, withdrawn, attitude_dad, iq, popularity, attendance)
 
+#explore the potentiel correlations (to deduce potentuel interactions)
+pairs.panels(final_delinquency, stars = TRUE)
 ```
+
+It seems to have interesting correlations between delinquency and mum discipline, familysize, jod of the father, attitude of the father, and intelligence coefficient. Then, discipline of the father and the mother are also correlated, which could be enter in the model as an interaction (and makes sense). The number of friends is correlated with the withdrawn, which could also be add as an interaction though. 
 
 ##QUESTION 3
-We wish to model the occurrence and extent of criminality in our participants on the basis of early life events or factors. Use all the considerations at your disposal (the description above, your data exploration in Question 2, your reading of the articles we have provided, etc.) to construct a statistical model, or even more than one model if you wish.  Interpret your model(s).  Write a function to assess the predictive accuracy of your model(s), test it, and apply it to your data
+construct a statistical model, or even more than one model if you wish.  Interpret your model(s).  Write a function to assess the predictive accuracy of your model(s), test it, and apply it to your data 
 ```{r}
+#set seed and split for the model
+set.seed(23)
+delinquency_train <- sample_frac(final_delinquency, 0.50)
+delinquency_test <- setdiff(final_delinquency, delinquency_train)
+```
 
+```{r}
+#try a linear model
+lm
 ```
 

@@ -11,7 +11,7 @@ output:
 ```{r}
 install.packages("pacman")
 library(pacman)
-p_load(tidyverse, haven, tufte, knitr, magrittr)
+p_load(tidyverse, haven, tufte, knitr, magrittr, psych, stats)
 ```
 
 #Load datafiles
@@ -25,16 +25,70 @@ Donald West and David Farrington collected data of 411 British boys/men of worki
 
 
 ##QUESTION 1
-You must include information about convictions at different ages in your data set i.e., you need to merge the two data files, and select the variables and cases you need for the later analysis. 
-
-If I well understood the question, we need to select variables which could be "early predictors of criminality". Therefore, I have only choosen variables collected before 10 years old, according the what have been found previously by Krohn (2006) and Kazemian (2011).
-Thus, chosen variables as potential predictors are the following (name from the Codebook, with number of the variable): conduct disorder of boy (53), discipline quality of father (62) and mother (63), family size (69), housing - care of interior (83), inconsistency in disagreement between parents (89), interest in education by parents (91), intake time of boy (93), job record of father (96), nervousness of boy (104), number of friends of boy (105), outgoing or withdrawn boy (117), paternal attitude (118), progressive matrices IQ (119), physical neglect of boy (123), peer rating popularity (125), broken home before age 10 (134), sibling disturbance (137), socioeconomic status of family (138), teacher rating: poor attendance (155)
+According to the question, we need to select variables which could be "early predictors of criminality". Therefore, I have only choosen variables collected before 10 years old, according the what have been found previously by Krohn (2006) and Kazemian (2011).
+Thus, chosen variables as potential predictors are the following (name from the Codebook, with number of the variable): conduct disorder of boy (53), discipline quality of father (62) and mother (63), family size (69), housing - care of interior (83), inconsistency in disagreement between parents (89), interest in education by parents (91), job record of father (96), nervousness of boy (104), number of friends of boy (105), outgoing or withdrawn boy (117), paternal attitude (118), progressive matrices IQ (119), physical neglect of boy (123), peer rating popularity (125), sibling disturbance (137), socioeconomic status of family (138), teacher rating: poor attendance (155)
 ```{r}
 predictors_1 <- 
   delinquency %>% 
-  select(v4, v53, v62, v63, v69, v83, v89, v91, v93, v96, v104, v105, v117, v118, v119, v123, v125, v134, v137, v138, v155)
+  select(v4, v53, v62, v63, v69, v83, v89, v91, v96, v104, v105, v117, v118, v119, v123, v125, v137, v138, v155)
 
-predictor_1 <- rename(predictors_1, id = v4, conduct = v53, disc_dad = v62, disc_mum = v63, familysize = v69, housecare = v83, betw_parents = v89, educ_interest = v91, intake = v93, job_dad = v96, nervousness = v104, friends = v105, withdrawn = v117, attitude_dad = v118, iq = v119, phys_neglect = v123, popularity = v125, broken_home = v134, sibl_disturb = v137, socioeco_fam = v138, attendance = v155)
+predictor_1 <- rename(predictors_1, id = v4, conduct = v53, disc_dad = v62, disc_mum = v63, familysize = v69, housecare = v83, betw_parents = v89, educ_interest = v91, job_dad = v96, nervousness = v104, friends = v105, withdrawn = v117, attitude_dad = v118, iq = v119, phys_neglect = v123, popularity = v125, sibl_disturb = v137, socioeco_fam = v138, attendance = v155)
+
+#Give labels to variables for clarity
+predictor_1$conduct <- factor(predictor_1$conduct,
+                              levels = c(0,1,2,3),
+                              labels = c("unknown", "well", "moderatebad", "verybadly"))
+predictor_1$disc_dad <- factor(predictor_1$disc_dad,
+                              levels = c(0,1,2,3,4,5),
+                              labels = c("unknown", "not", "spoilt", "harsh", "disinterest", "NA"))
+predictor_1$disc_mum <- factor(predictor_1$disc_mum,
+                              levels = c(0,1,2,3,4,5),
+                              labels = c("unknown", "not", "spoilt", "harsh", "disinterest", "NA"))
+predictor_1$familysize <- factor(predictor_1$familysize,
+                              levels = c(1,2,3,4,5,6),
+                              labels = c("none", "one", "two", "three", "four", "five_more"))
+predictor_1$housecare <- factor(predictor_1$housecare,
+                              levels = c(0,1,2),
+                              labels = c("unknown", "satisfactory", "veryneglected"))
+predictor_1$betw_parents <- factor(predictor_1$betw_parents,
+                              levels = c(0,1,2,3),
+                              labels = c("unknown", "consistency", "inconsistency", "NA"))
+predictor_1$educ_interest <- factor(predictor_1$educ_interest,
+                              levels = c(0,1,2,3),
+                              labels = c("unknown", "veryinterested", "average", "notinterested"))
+predictor_1$job_dad <- factor(predictor_1$job_dad,
+                              levels = c(0,1,2,3,4),
+                              labels = c("unknown", "alwstable", "nowstable", "erractic", "NA"))
+predictor_1$nervousness <- factor(predictor_1$nervousness,
+                              levels = c(0,1,2,3,4),
+                              labels = c("unknown", "not", "minimal", "moderate", "severe"))
+predictor_1$friends <- factor(predictor_1$friends,
+                              levels = c(0,1,2,3),
+                              labels = c("unknown", "many", "average", "fewornot"))
+predictor_1$withdrawn <- factor(predictor_1$withdrawn,
+                              levels = c(0,1,2,3),
+                              labels = c("unknown", "atease", "normal", "shyorwithdrawn"))
+predictor_1$attitude_dad <- factor(predictor_1$attitude_dad,
+                              levels = c(0,1,2,3,4,5,6),
+                              labels = c("unknown", "warm", "passive", "cruel", "neglected", "absent", "dead"))
+predictor_1$iq <- factor(predictor_1$iq,
+                              levels = c(1,2,3,4),
+                              labels = c("min111", "101-110", "91-100", "max90"))
+predictor_1$phys_neglect <- factor(predictor_1$phys_neglect,
+                              levels = c(0,1,2),
+                              labels = c("unknown", "absent", "present"))
+predictor_1$popularity <- factor(predictor_1$popularity,
+                              levels = c(0,1,2,3,4),
+                              labels = c("unknown", "popular", "averagepop", "averageunpop", "unpopular"))
+predictor_1$sibl_disturb <- factor(predictor_1$sibl_disturb,
+                              levels = c(0,1,2,3),
+                              labels = c("unknown", "none", "distrubance", "NA"))
+predictor_1$socioeco_fam <- factor(predictor_1$socioeco_fam,
+                              levels = c(1,2,3,4,5,6),
+                              labels = c("II-NM", "III-NM", "III-M", "IV-NM", "IV-M", "V"))
+predictor_1$attendance <- factor(predictor_1$attendance,
+                              levels = c(0,1,2),
+                              labels = c("unknown", "satisfactory", "truance_abstsm"))
 ```
 
 In addition, variables on conviction were first selected to create a dichotomous binary variable: convicted vs non-convicted (without taking into account neither the age of conviction(s), nor the number of conviction)
@@ -62,28 +116,73 @@ conviction3b <-
 conviction_merge <- left_join(conviction3a, conviction3b, by = "id")
 
 #create a new binary variable as convicted versus never convicted, resulting on if not convicted as adult (=1) and as juvenile(=1), then not convicted (=1), otherwise convicted (=2)
-conviction_merge$convicted <- if_else(conviction_merge$as_adult == 1 & conviction_merge$as_juvenile == 1, 1, 2) 
+conviction_merge$convicted <- if_else(conviction_merge$as_adult == 1 & conviction_merge$as_juvenile == 1, 1, 2)
 
+conviction_merge$convicted <- factor(conviction_merge$convicted,
+                              levels = c(1,2),
+                              labels = c("never", "atleastonce"))
 ```
 
-Variable were then merge together in one file
+Variable were then merged together in one file
 ```{r}
-#join <- left_join(predictor_1, conviction, by = "id")
+#transform id as factor in the predictor datafile
+predictor_1$id <- as.factor(predictor_1$id)
+
+#merge
+conviction_full <- left_join(predictor_1, conviction_merge, by = "id")
 ```
 
-Because the number of predictor still be huge, a first look is necessary in order to do a first sort.
-```{r}
-
-```
-
-We can seen that ...
-Therefore, the file have been reduced, removing the following variables XX XX XX, and variable hare been renamed
-```{r}
-
-```
 
 ##QUESTION 2
-Explore the data set, bearing in mind that our key question concerns what the early life determinants of criminality are.  What is worth exploring further, do you think?  Report several (but not too many!) graphs and tables – choose these prudently, and discuss each graph or table you include.  
+Report several (but not too many!) graphs and tables – choose these prudently, and discuss each graph or table you include.  
+
+Because I selected numerous potential predictors, a first look is necessary to know what is worth exploring further. Furthermore, bearing in mind that the variable convicted "as_juvenile" will be used as IV, according to the questions which is found early predictors (so, for ore accuracy, only juvenile delinguency will be used. This can be discussed, also because I could have taken the 10-13yo delinquency also, but not adult delinquency since so many other variables could be predictors. But there is not point to argue about that here.)
+```{r}
+#transform all variable as factors
+conviction_full$id <- as.numeric(conviction_full$id)
+
+#have a look to the deliquency rate
+table(conviction_full$as_juvenile)
+ggplot(data = conviction_full, aes(x = convicted))+
+  geom_bar()
+ggplot(data = conviction_full, aes(x = as_adult))+
+  geom_bar()
+ggplot(data = conviction_full, aes(x = as_juvenile))+
+  geom_bar()
+
+#explore the predictors
+pairs.panels(conviction_full)
+ggplot(data = conviction_full, aes(x = convicted))+
+  geom_bar()+
+  facet_wrap(~job_dad)
+
+table(conviction_full$as_juvenile, conviction_full$conduct) #not
+table(conviction_full$as_juvenile, conviction_full$disc_dad) #a voir
+table(conviction_full$as_juvenile, conviction_full$disc_mum) #a voir
+table(conviction_full$as_juvenile, conviction_full$familysize) #a voir
+table(conviction_full$as_juvenile, conviction_full$housecare) #nop
+table(conviction_full$as_juvenile, conviction_full$betw_parents) #nop
+table(conviction_full$as_juvenile, conviction_full$educ_interest) #nop
+table(conviction_full$as_juvenile, conviction_full$job_dad) #a voir
+table(conviction_full$as_juvenile, conviction_full$nervousness) #nop
+table(conviction_full$as_juvenile, conviction_full$friends) #yep
+table(conviction_full$as_juvenile, conviction_full$withdrawn) #a voir
+table(conviction_full$as_juvenile, conviction_full$attitude_dad) #to see
+table(conviction_full$as_juvenile, conviction_full$iq)#ok
+table(conviction_full$as_juvenile, conviction_full$phys_neglect) #nop
+table(conviction_full$as_juvenile, conviction_full$popularity) #a voir
+table(conviction_full$as_juvenile, conviction_full$sibl_disturb) #nop
+table(conviction_full$as_juvenile, conviction_full$socioeco_fam) #nop
+table(conviction_full$as_juvenile, conviction_full$attendance)#to see
+
+```
+
+We can seen that the file is 
+Therefore, the file have been reduced, removing the following variables XX XX XX, and variable hare been renamed
+```{r}
+#set seed and split for the model
+```
+
 ```{r}
 
 ```

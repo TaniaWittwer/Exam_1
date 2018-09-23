@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1537689954090.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "EE1B1EA5",
+    "lastKnownWriteTime" : 2,
+    "last_content_update" : 1537689954090,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "248A4BF9",
+        "caption" : "conviction_merge",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=conviction_merge&cache_key=248A4BF9",
+        "displayedObservations" : 411,
+        "environment" : "",
+        "object" : "conviction_merge",
+        "preview" : 0,
+        "totalObservations" : 411,
+        "variables" : 2
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

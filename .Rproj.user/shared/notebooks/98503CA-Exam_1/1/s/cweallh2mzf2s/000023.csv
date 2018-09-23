@@ -1,0 +1,7 @@
+"0","#create a new binary variable as convicted versus never convicted (regardless to the age of conviction [adult/juvenile])
+conviction_merge$convicted <- if_else(conviction_merge$as_adult == 1, 0, 1)
+"
+"2","Error: unexpected symbol in:
+""#create a new binary variable as convicted versus never convicted (regardless to the age of conviction [adult/juvenile])
+conviction_merge""
+"

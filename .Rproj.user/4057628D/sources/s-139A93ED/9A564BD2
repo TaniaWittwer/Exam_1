@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1537689971480.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "9A564BD2",
+    "lastKnownWriteTime" : 6,
+    "last_content_update" : 1537689971480,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "A553716C",
+        "caption" : "conviction3a",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=conviction3a&cache_key=A553716C",
+        "displayedObservations" : 411,
+        "environment" : "",
+        "object" : "conviction3a",
+        "preview" : 0,
+        "totalObservations" : 411,
+        "variables" : 2
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

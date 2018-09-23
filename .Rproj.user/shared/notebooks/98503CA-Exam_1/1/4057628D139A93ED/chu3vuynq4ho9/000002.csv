@@ -1,0 +1,5 @@
+"0","#transform id as factor in the predictor datafile"
+"0","predictor_1$id <- as.factor(predictor_1$id)"
+"0","#merge"
+"0","conviction_full <- left_join(predictor_1, conviction_merge, by = ""id"")"
+"2","Column `id` joining factor and character vector, coercing into character vector"

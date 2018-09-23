@@ -39,20 +39,36 @@ predictor_1 <- rename(predictors_1, id = v4, conduct = v53, disc_dad = v62, disc
 
 In addition, variables on conviction were first selected to create a dichotomous binary variable: convicted vs non-convicted (without taking into account neither the age of conviction(s), nor the number of conviction)
 ```{r}
+#rename to avoid 'variable not found' problem
 conviction <- rename(conviction, id = icpsr_seq_id_number)
+
+#make a wide table
 conviction_spread <- 
   spread(data = conviction, key = id, value = convicted)
 
-conviction2 <- conviction_spread[6:7,]
-conviction2
+#select only variable containing conviction as adult or juvenile
+conviction2a <- conviction_spread[6,]
+conviction2b <- conviction_spread[7,]
 
-#for i in 1:length(if i = 1)
-#faire une somme en mode convicted versus non convicted 
+#make a long table and rename to avoid matching error and for clarity
+conviction3a <- 
+  gather(conviction2a, key = id, value = agecat) %>% 
+  rename(as_adult = agecat)
+conviction3b <- 
+  gather(conviction2b, key = id, value = agecat) %>% 
+  rename(as_juvenile = agecat)
+
+#merge two tables
+conviction_merge <- left_join(conviction3a, conviction3b, by = "id")
+
+#create a new binary variable as convicted versus never convicted, resulting on if not convicted as adult (=1) and as juvenile(=1), then not convicted (=1), otherwise convicted (=2)
+conviction_merge$convicted <- if_else(conviction_merge$as_adult == 1 & conviction_merge$as_juvenile == 1, 1, 2) 
+
 ```
 
 Variable were then merge together in one file
 ```{r}
-join <- left_join(predictor_1, conviction, by = "id")
+#join <- left_join(predictor_1, conviction, by = "id")
 ```
 
 Because the number of predictor still be huge, a first look is necessary in order to do a first sort.

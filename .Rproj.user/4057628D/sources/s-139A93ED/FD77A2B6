@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1537690026416.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "FD77A2B6",
+    "lastKnownWriteTime" : 8246181276029116269,
+    "last_content_update" : 1537690026416,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "A01A07CA",
+        "caption" : "conviction_spread",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=conviction_spread&cache_key=A01A07CA",
+        "displayedObservations" : 7,
+        "environment" : "",
+        "object" : "conviction_spread",
+        "preview" : 0,
+        "totalObservations" : 7,
+        "variables" : 412
+    },
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

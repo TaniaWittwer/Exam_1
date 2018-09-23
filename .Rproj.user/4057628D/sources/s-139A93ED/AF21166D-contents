@@ -11,7 +11,7 @@ output:
 ```{r}
 install.packages("pacman")
 library(pacman)
-p_load(tidyverse, haven, tufte, knitr, magrittr)
+p_load(tidyverse, haven, tufte, knitr, magrittr, psych)
 ```
 
 #Load datafiles
@@ -25,9 +25,7 @@ Donald West and David Farrington collected data of 411 British boys/men of worki
 
 
 ##QUESTION 1
-You must include information about convictions at different ages in your data set i.e., you need to merge the two data files, and select the variables and cases you need for the later analysis. 
-
-If I well understood the question, we need to select variables which could be "early predictors of criminality". Therefore, I have only choosen variables collected before 10 years old, according the what have been found previously by Krohn (2006) and Kazemian (2011).
+According to the question, we need to select variables which could be "early predictors of criminality". Therefore, I have only choosen variables collected before 10 years old, according the what have been found previously by Krohn (2006) and Kazemian (2011).
 Thus, chosen variables as potential predictors are the following (name from the Codebook, with number of the variable): conduct disorder of boy (53), discipline quality of father (62) and mother (63), family size (69), housing - care of interior (83), inconsistency in disagreement between parents (89), interest in education by parents (91), intake time of boy (93), job record of father (96), nervousness of boy (104), number of friends of boy (105), outgoing or withdrawn boy (117), paternal attitude (118), progressive matrices IQ (119), physical neglect of boy (123), peer rating popularity (125), broken home before age 10 (134), sibling disturbance (137), socioeconomic status of family (138), teacher rating: poor attendance (155)
 ```{r}
 predictors_1 <- 
@@ -39,25 +37,52 @@ predictor_1 <- rename(predictors_1, id = v4, conduct = v53, disc_dad = v62, disc
 
 In addition, variables on conviction were first selected to create a dichotomous binary variable: convicted vs non-convicted (without taking into account neither the age of conviction(s), nor the number of conviction)
 ```{r}
+#rename to avoid 'variable not found' problem
 conviction <- rename(conviction, id = icpsr_seq_id_number)
+
+#make a wide table
 conviction_spread <- 
   spread(data = conviction, key = id, value = convicted)
 
-conviction2 <- conviction_spread[6:7,]
-conviction2
+#select only variable containing conviction as adult or juvenile
+conviction2a <- conviction_spread[6,]
+conviction2b <- conviction_spread[7,]
 
-#for i in 1:length(if i = 1)
-#faire une somme en mode convicted versus non convicted 
+#make a long table and rename to avoid matching error and for clarity
+conviction3a <- 
+  gather(conviction2a, key = id, value = agecat) %>% 
+  rename(as_adult = agecat)
+conviction3b <- 
+  gather(conviction2b, key = id, value = agecat) %>% 
+  rename(as_juvenile = agecat)
+
+#merge two tables
+conviction_merge <- left_join(conviction3a, conviction3b, by = "id")
+
+#create a new binary variable as convicted versus never convicted, resulting on if not convicted as adult (=1) and as juvenile(=1), then not convicted (=1), otherwise convicted (=2)
+conviction_merge$convicted <- if_else(conviction_merge$as_adult == 1 & conviction_merge$as_juvenile == 1, 1, 2) 
 ```
 
-Variable were then merge together in one file
+Variable were then merged together in one file
 ```{r}
-join <- left_join(predictor_1, conviction, by = "id")
+#transform id as factor in the predictor datafile
+predictor_1$id <- as.factor(predictor_1$id)
+
+#merge
+conviction_full <- left_join(predictor_1, conviction_merge, by = "id")
 ```
 
-Because the number of predictor still be huge, a first look is necessary in order to do a first sort.
-```{r}
 
+##QUESTION 2
+Report several (but not too many!) graphs and tables – choose these prudently, and discuss each graph or table you include.  
+
+Because I selected numerous potential predictors, a first look is necessary to know what is worth exploring further. 
+```{r}
+#transform all variable as factors
+#conviction_full <- lapply(conviction_full, as.factor)
+
+#summarise our dataset
+describeBy(conviction_full)
 ```
 
 We can seen that ...
@@ -66,8 +91,6 @@ Therefore, the file have been reduced, removing the following variables XX XX XX
 
 ```
 
-##QUESTION 2
-Explore the data set, bearing in mind that our key question concerns what the early life determinants of criminality are.  What is worth exploring further, do you think?  Report several (but not too many!) graphs and tables – choose these prudently, and discuss each graph or table you include.  
 ```{r}
 
 ```

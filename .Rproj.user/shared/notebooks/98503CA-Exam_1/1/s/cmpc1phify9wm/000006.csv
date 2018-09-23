@@ -1,0 +1,8 @@
+"0","#set seed and split for the model"
+"0","set.seed(23)"
+"0","delinquency_train <- sample_frac(final_delinquency, .50)"
+"0","delinquency_test <- setdiff(final_delinquency, delinquency_train)"
+"0","#convert id into factor"
+"0","delinquency_train$as_juvenile <- as.factor(delinquency_train$as_juvenile)"
+"0","delinquency_test$as_juvenile <- as.factor(delinquency_test$as_juvenile)"
+"0","#delinquency_test = na.omit(delinquency_test)"

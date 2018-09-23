@@ -1,0 +1,8 @@
+"0","#create the final dataset for the predictor model"
+"0","final_delinquency <-"
+"0","  conviction_full %>% "
+"0","  select(as_juvenile, disc_dad, disc_mum, familysize, job_dad, friends, withdrawn, attitude_dad, iq, popularity, attendance)"
+"0","#convert predictors as numeric"
+"0","final_delinquency <- data.frame(lapply(final_delinquency, function(x) as.numeric(as.factor(x))))"
+"0","#explore the potentiel correlations (to deduce potentuel interactions)"
+"0","pairs.panels(final_delinquency, stars = TRUE)"

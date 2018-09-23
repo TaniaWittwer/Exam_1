@@ -1,5 +1,0 @@
-"0","delinquency_test <- setdiff(final_delinquency - delinquency_train)
-"
-"2","Error in Ops.data.frame(final_delinquency, delinquency_train) : 
-  '-' only defined for equally-sized data frames
-"

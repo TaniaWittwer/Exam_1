@@ -1,0 +1,4 @@
+"0","confusionMatrix(predict2, delinquency_train$as_juvenile)
+"
+"2","Error: `data` and `reference` should be factors with the same levels.
+"

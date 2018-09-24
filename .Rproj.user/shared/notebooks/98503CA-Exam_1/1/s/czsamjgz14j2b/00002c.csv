@@ -1,8 +1,0 @@
-"0","model2 <- glm(as_juvenile ~ disc_dad*disc_mum + familysize + job_dad + friends + withdrawn + attitude_dad + iq + popularity + attendance, data = delinquency_train)
-"
-"2","'-' not meaningful for factors"
-"2","'-' not meaningful for factors"
-"2","'-' not meaningful for factors"
-"2","Error in glm.fit(x = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  : 
-  NA/NaN/Inf in 'y'
-"

@@ -208,7 +208,7 @@ delinquency_test <- setdiff(final_delinquency, delinquency_train)
 delinquency_train$as_juvenile <- as.factor(delinquency_train$as_juvenile)
 delinquency_test$as_juvenile <- as.factor(delinquency_test$as_juvenile)
 
-#delinquency_test = na.omit(delinquency_test)
+delinquency_test = na.omit(delinquency_test)
 ```
 
 Because we have a binomial variable to predict, let's use a logistic regression.
@@ -222,12 +222,20 @@ NagelkerkeR2(model1)
 exp(coef(model1))
 
 predict1 <- predict(model1, newdata = delinquency_test)
-confusionMatrix(predict1, delinquency_test$as_juvenile)
+#confusionMatrix(predict1, delinquency_test$as_juvenile)
+#this confusionMatrix command has a problem resulting on "error: 'data' and 'reference' should be factors with the same levels", again. I do not understand why, because everything is similar in both of my train and test subsets when I check the structure, etc. I made numerous research on the Internet, without any success. Thus, I gave up, again.
 
 
-#try a second one with interactions
-model2 <- glm(as_juvenile ~ disc_dad*disc_mum + familysize + job_dad + friends + withdrawn + attitude_dad + iq + popularity + attendance, data = delinquency_train)
+#try a second model adding interactions
+model2 <- glm(as_juvenile ~ disc_dad*disc_mum + familysize + job_dad + friends*withdrawn + attitude_dad + iq + popularity + attendance, data = delinquency_train, family = "binomial")
 summary(model2)
+
+NagelkerkeR2(model2)
+exp(coef(model2))
+
+predict2 <- predict(model2, newdata = delinquency_test)
+#confusionMatrix(predict2, delinquency_test$as_juvenile)
+#same problem. Because of that, I cannot really interpret (absence of the classification accuracy, sensitivity and sensibility)
 ```
 
 ```{r}

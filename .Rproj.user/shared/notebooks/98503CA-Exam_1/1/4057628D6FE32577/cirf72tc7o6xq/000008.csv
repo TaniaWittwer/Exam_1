@@ -1,0 +1,2 @@
+"0","prune_delinquency_tree = prune.tree(delinquency_tree, best = 5)"
+"0","plot(prune_delinquency_tree)"

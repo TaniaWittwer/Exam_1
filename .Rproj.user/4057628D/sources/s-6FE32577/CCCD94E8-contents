@@ -1,0 +1,316 @@
+---
+title: "MA Stats Seminar 4"
+author: "CG Tredoux"
+date: "11 September 2017"
+output:
+  beamer_presentation: default
+  ioslides_presentation: default
+---
+
+```{r loadpacks, echo=FALSE, results='hide', message=FALSE}
+
+# We load some packages, set some options
+options(repos = "http://cran.mirror.ac.za/")
+library(pacman)
+p_load(boot, car, dplyr, ggplot2, Metrics, cowplot, gapminder)
+
+knitr::knit_hooks$set(mysize = function(before, options, envir) {
+  if (before) 
+    return(options$size)
+})
+
+```
+
+
+# Overview of seminar
+
+1. Cross validation   
+   - Validation set approach  
+     - Problems with validation sets  
+   - Leave one out cross validation (LOOCV)  
+     - Problems with LOOCV  
+   - K fold Cross validation 
+    
+2. Bootstrapping  
+  - Why do we make assumptions of normality?  
+    - To sustain statistical inference  
+  - And if we don't have normality?    
+      - We can estimate probability empirically  
+      - i.e. Bootstrap  
+  - How to bootstrap with R  
+
+
+# Cross Validation
+
+We are familiar at this stage with ONE aspect of cross-validation.   
+
+That is the splitting of the original data file into training and testing sets, the development of the model on the training set, and the testing of the model on the test set.
+
+This is called the "validation set" approach to cross validation
+
+# Problems with validation sets?
+
+You tell me!  
+
+
+# Let's take a look at a simple example 
+
+```{r validationset1, mysize = TRUE, size="\\scriptsize",}
+
+# We generate a dataset with vars x and y
+# where X varies randomly and y is correlated
+# with x
+set.seed(1)
+x <- rnorm(100); y <- x + 1.5*rnorm(100)
+adataset <- data.frame(x, y)
+
+# We create a validation set
+train <- sample_frac(adataset, 0.75)
+test <- setdiff(adataset, train)
+
+# We train the linear model
+amodel <- lm(y ~ x, data = train)
+
+# We generate predictions and find the MSE for each
+amodeltrainpredict <- predict(amodel)
+amodeltestpredict <- predict(amodel, newdata = test)
+mse(amodeltrainpredict,train$y); mse(amodeltestpredict,test$y)
+```
+
+# Let's loop that
+
+We can see there is a difference between MSE train and test.  
+But let's do that 100 times...
+```{r loopvalidationset, mysize = TRUE, size="\\scriptsize"}
+# Create the blank data frame to hold the results
+mseholder <- data.frame(NULL)
+
+# Repeat set creation, modeling etc. 100 times
+for (i in 1:100){
+  train <- sample_frac(adataset, 0.75)
+  test <- setdiff(adataset, train)
+  amodel <- lm(y ~ x, data = train)
+  amodeltrainpredict <- predict(amodel)
+  amodeltestpredict <- predict(amodel, newdata = test)
+  mseholder[i,1] <- mse(amodeltrainpredict, train$y)
+  mseholder[i,2] <- mse(amodeltestpredict, test$y)
+  }
+# Show mean MSE for training and test
+sapply(mseholder, mean)
+```
+
+# Since we have the original set, we know the true value
+
+```{r loopvalidationset2, mysize = TRUE, size="\\scriptsize"}
+amodel <- lm(y ~ x, data = adataset)
+amodelpredict <- predict(amodel)
+mse(amodelpredict, adataset$y)
+```
+# Let's take a look at the distribution of these, though
+```{r plotvalidloop, mysize = TRUE, size="\\scriptsize"}
+p1 <- ggplot(mseholder, aes(x = V1)) + 
+  geom_histogram(color = "red", fill  = "white") +
+  xlim(1,6) + 
+  geom_vline(xintercept = mean(mseholder$V1), color = "blue", 
+  size =1, linetype = 2) + xlab("MSE for train") + 
+  geom_text(data = NULL, x = 5, y = 10, label = "Blue line is mean MSE")
+
+p2 <- ggplot(mseholder, aes(x = V2)) + 
+  geom_histogram(color = "red", fill  = "white") +
+  xlim(1,6) + geom_vline(xintercept = mean(mseholder$V2), 
+  color = "blue", size =1, linetype = 2)+ xlab("MSE for test")
+```
+
+# Draw plots
+
+```{r drawvalidationplots, message=FALSE, echo = FALSE, warning=FALSE, mysize = TRUE, size="\\scriptsize"}
+plot_grid(p1, p2, nrow = 2)
+
+```
+
+# Lessons...
+
+The variation is massive, we can make this go away with much larger samples
+
+```{r largevalid2, mysize = TRUE, size="\\scriptsize"}
+mseholder <- data.frame(NULL); set.seed(1)
+x <- rnorm(1000); y <- x + 1.5*rnorm(1000); adataset <- data.frame(x, y)
+
+for (i in 1:100){
+  train <- sample_frac(adataset, 0.75); test <- setdiff(adataset, train)
+  amodel <- lm(y ~ x, data = train); amodeltrainpredict <- predict(amodel)
+  amodeltestpredict <- predict(amodel, newdata = test)
+  mseholder[i,1] <- mse(amodeltrainpredict, train$y)
+  mseholder[i,2] <- mse(amodeltestpredict, test$y)
+  }
+sapply(mseholder, mean)
+
+# true value
+amodel <- lm(y ~ x, data = adataset)
+amodelpredict <- predict(amodel)
+mse(amodelpredict, adataset$y)
+```
+
+# More..
+
+```{r plotlargevalid3, message=FALSE, mysize = TRUE, size="\\scriptsize"}
+
+p1 <- ggplot(mseholder, aes(x = V1)) + 
+       geom_histogram(color = "red", fill  = "white") +
+       xlim(2,6) + geom_vline(xintercept = mean(mseholder$V1), 
+       color = "blue", size =1, linetype = 2) + 
+       xlab("MSE for train") + 
+       geom_text(data = NULL, x = 5, y = 10, 
+                 label = "Blue line is mean MSE")
+p2 <- ggplot(mseholder, aes(x = V2)) + 
+        geom_histogram(color = "red", fill  = "white") +
+        xlim(2,6) + geom_vline(xintercept = mean(mseholder$V2), 
+        color = "blue", size =1, linetype = 2)+
+        xlab("MSE for test")
+```
+
+# Plot large sample validation set error
+
+```{r plotlargevalid4, mysize = TRUE, warning = FALSE, message = FALSE, size="\\scriptsize"}
+plot_grid(p1, p2, nrow = 2)
+
+```
+
+# Alternatives
+
+The weakness of the validation set approach is the variation in MSE, especially when N is fairly small.
+Which is more typical than not.
+
+What can we do?
+
+There are several key alternatives.
+
+
+#  LOOCV
+
+Leave One Out Cross Validation
+
+\includegraphics[width=4in]{loocv.png}
+
+# LOOCV cont.
+
+LOOCV is available as an option directly through the glm function.  
+
+Let's re-run our linear model through glm and use the cv.glm function from the 'boot' package
+
+```{r glm1, mysize = TRUE, message = FALSE, size="\\scriptsize"}
+
+aglmmodel <- glm(y ~ x, data = adataset)
+aglmmodelpredict <- predict(aglmmodel)
+print(mse(aglmmodelpredict, adataset$y))
+cvmse <- cv.glm(adataset, aglmmodel)
+cvmse$delta
+
+```
+
+# What did that tell us?
+
+We were able to estimate the MSE we would have obtained on a test set, without the sampling variation problems we have with validation sets.
+
+Our MSE in LOOCV was computed by taking n - 1 cases, computing a linear model, making a prediction, and tabulating the error.  This is repeated for all n cases, and the error averaged.
+
+This is unproblematic for linear models even for large n (a shortcut formula exists), but is not a good idea for non linear models or those that are not of the 'identity' family.
+
+
+# K fold cross val
+
+It turns out that a slightly better approach even is to do something called k fold cross validation.
+
+\includegraphics[width=4in]{fivefoldcv.png}
+
+
+# Apply this to our running example
+
+```{r glm2, mysize = TRUE, message = FALSE, size="\\scriptsize"}
+
+aglmmodel <- glm(y ~ x, data = adataset)
+aglmmodelpredict <- predict(aglmmodel)
+print(mse(aglmmodelpredict, adataset$y))
+cvmse <- cv.glm(adataset, aglmmodel, K = 5)
+cvmse$delta
+
+```
+
+
+# Logistic regression example
+
+```{r glm3, mysize = TRUE, message = FALSE, size="\\scriptsize"}
+
+set.seed(1)
+x <- rnorm(100); y <- ifelse(x < 0,1,0)
+y <- y + rnorm(100,0,.5)
+y <- ifelse(y < 0,1,0)
+adataset <- data.frame(x, y)
+
+aglmmodel <- glm(y ~ x, family = "binomial", data = adataset)
+aglmmodelpredict <- predict(aglmmodel, type="response")
+z <- table(round(aglmmodelpredict,0), adataset$y)
+sum(diag(z))/sum(z)
+cost <- function(r, pi = 0) mean(abs(r-pi) > 0.5)
+cvmse <- cv.glm(adataset, cost = cost, aglmmodel, K = 5)
+1 - cvmse$delta
+
+```
+
+
+# Using cross-validation to choose a model
+
+One of the most useful things to do with cross validation methods is to choose models.
+
+That is, rather than rely on tests of significance, we use cross validation to choose the model.  The model we choose is that with the lowest MSE.
+
+Tests of significance can be helpful, but are not very useful when n is large, as standard errors decrease considerably, and small - perhaps practically meaningless - differences become significant.
+
+e.g.  $t = \frac{\bar{x}-\mu}{\frac{s}{\sqrt{n}}}$
+
+
+# Example of choosing degree of polynomial
+
+Remember this analysis!
+
+```{r poly, mysize = TRUE, message = FALSE, results="hide", size="\\scriptsize"}
+
+polymodel1 <- lm(lifeExp ~ poly(gdpPercap,9), data = gapminder)
+summary(polymodel1)
+```
+
+
+# Example of choosing degree of polynomial cont.
+
+Let's run the 8 orders through cross validation to see what happens to MSE.
+
+```{r poly2, mysize = TRUE, message = FALSE, size="\\scriptsize"}
+# Here's the basic structure
+polymodel2 <- glm(lifeExp ~ poly(gdpPercap,9), data = gapminder)
+cverror <- cv.glm(gapminder, polymodel2, K = 5)
+cverror$delta
+cverror$delta[2]
+
+# Now let's loop it; we choose the second delta value
+set.seed(99)
+polyerror <- data.frame(NULL)
+for (i in 1:9){
+  polymodel <- glm(lifeExp ~ poly(gdpPercap,i), data = gapminder)
+  cverror <- cv.glm(gapminder, polymodel, K = 10)
+  polyerror[i,1] <- cverror$delta[2]
+  polyerror[i,2] <- i
+}
+polyerror <- rename(polyerror, MSE = V1, Order = V2)
+
+```
+
+# Plot the errors to see the pattern
+```{r poly3, mysize = TRUE, message = FALSE, size="\\scriptsize", fig.height=2, fig.width=4}
+# Here's the basic structure
+ggplot(polyerror, aes(x = Order, y = MSE, group =1))+
+  geom_line(size = 1, color = "dark grey") + scale_x_continuous(breaks = 1:9)+
+  geom_point(shape = 4, color = "red") + theme_bw(base_size = 9)
+```
+
+We would stop at order = 3 or order = 4 in this example, as MSE does not decrease much for higher orders.
+

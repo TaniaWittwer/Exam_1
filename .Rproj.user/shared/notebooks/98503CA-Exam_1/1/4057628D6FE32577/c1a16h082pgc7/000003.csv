@@ -1,0 +1,2 @@
+"0","cv_delinquency_tree <- cv.tree(delinquency_tree)"
+"0","plot(cv_delinquency_tree$size, cv_delinquency_tree$dev, type = ""b"")"

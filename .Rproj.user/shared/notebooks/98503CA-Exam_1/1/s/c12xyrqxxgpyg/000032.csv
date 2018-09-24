@@ -1,3 +1,0 @@
-"0","ggplot(data = conviction_full, aes(x = as_juvenile))+"
-"0","  geom_bar(aes(y = ..prop.., group = 2))+"
-"0","  facet_wrap(~job_dad)"

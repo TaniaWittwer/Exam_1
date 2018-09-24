@@ -1,0 +1,271 @@
+---
+title: "Assignment_6"
+output: html_document
+---
+
+```{r}
+install.packages("pacman")
+library(pacman)
+p_load(tidyverse, magrittr, readr, readxl, psych, modelr, tree, randomForest, car, dplyr, Metrics, cowplot, caret, gbm, ElemStatLearn, MASS, matrixStats)
+```
+
+PART B.
+Load the italian wines datafile
+```{r}
+italianwines <- read.csv("italianwines.csv")
+
+#set the seed and split into two subset: train and test
+set.seed(24)
+italianwines$X <- NULL #remove the first column (to avoid conflict with wine classification)
+italianwines_train  <- sample_frac(italianwines, 0.5)
+italianwines_test <- setdiff(italianwines, italianwines_train)
+```
+
+1a. Attemps to predict the Italian wine types according to their physical properties. Use a classification tree approach, followed by bagging, random forests, and boosted classification trees. You may want to compare this to a simpler method, such as LDA. Report appropriate measures of error, and produce a final chart that compares the methods in their classification ability. 
+```{r}
+#build a tree to predict wine classification with all variables, plot and show names
+wine_tree = tree(wine ~ ., data = italianwines_train)
+plot(wine_tree)                                        
+text(wine_tree, pretty = 1)   
+```
+Thanks to this classification, we can see that proline is the best classificator, meaning that wine can first be split according to their "score/amount" of proline. Then, for the wine with < 755 proline, flavanoids is the second classificator, while alcohol is for proline >= 755. Without developing all the branches, to differenciate Barbera, Grigolino and Barolo, we first use proline, then flavanoid or alcohol and sugar or alcohol. The more discriminant caracteristic is then proline. However, we can see than the three outputs are double, meaning that Barbera, for example, can by distinguish by a different level of sugar (the right branch show the best classification).
+
+```{r}
+summary(wine_tree)
+```
+We can see that this prediction model is quite good, with a misclassification error rate of .05, meaning that there is 5 misclassifications for 89 right ones. 
+
+```{r}
+#use cross-validation to find an alpha and use it to prune the tree (and avoid overfitting)
+cv_wine_tree <- cv.tree(wine_tree)
+plot(cv_wine_tree$size, cv_wine_tree$dev, type = "b")
+```
+From this graph, we can see that the best seems to be 3, 4 or 5, we will then use a 4 value to prune the tree: that means we ask for 4 branchs as outputs.
+
+```{r}
+#specify the number of branch and build a prune tree
+prune_wine_tree = prune.tree(wine_tree, best = 4)
+plot(prune_wine_tree)
+text(prune_wine_tree, pretty = 1)
+
+summary(prune_wine_tree)
+```
+This new classification follows the same idea as the first one, and the misclassification error rate is exaclty the same.
+
+```{r}
+#then use bagging method which is a bootstrapping method, to construct lots of tree from bootstrapped subsets
+
+set.seed(4)
+wine_bagg <- randomForest(wine ~ ., 
+                          mtry = 27, importance = TRUE, #number of variables (excluded wine)
+                          ntree = 5000, data = italianwines_train)
+
+baggpredict <- predict(wine_bagg, newdata = italianwines_test)
+confusionMatrix(baggpredict, italianwines_test$wine)
+```
+With this method, we also find a good classification accuracy of 91%, and observe that Grignolino is the only wine which is not 100% accurately classified (with 79% sensitivity and a perfect specificity)
+
+```{r}
+#we then explore the bagging method with table and graph
+importance(wine_bagg)
+varImpPlot(wine_bagg)
+```
+These information show than the more discriminant feature is proline, then flavanoids, followed by hue, colour, alcohol and OD_dw. That means that the classification accuracy will decrease the most if we remove proline from our model (resulting in a higher misclassification rate)
+
+
+```{r}
+#then, use a randomforest method, to decorrelate the individual tree, which is not done woth bagging
+wine_rf <- randomForest(wine ~ .,
+                        mtry = 27, importance = TRUE, #27 correspond to the number of possible variables
+                        data = italianwines_train)
+
+wine_rfpredict <- predict(wine_rf, newdata = italianwines_test)
+confusionMatrix(wine_rfpredict, italianwines_test$wine)
+```
+Once again, we find a good classification accuracy, even if it drops from the previous model (90%, against 91%). 
+
+```{r}
+#Finnally, we can use the boosting method
+wine_boost <- gbm(wine ~ .,
+                  data = italianwines_train, distribution = "multinomial",
+                  n.tree = 5000, interaction.depth = 2) #2 is to autorize 2-ways interactions
+summary(wine_boost)
+
+wine_boostpredict <- predict(wine_boost, newdata = italianwines_test, n.trees = 5000, type = "response")
+wine_boostpredict_m <- data.frame(round(wine_boostpredict))
+
+#I know the idea, but I spent to much time to find a solution without any success: the idea is have a dataframe of our predict and select the maximum in each row to attribute the "appartenance" to the wine. That means that, for example the maximum value in the first row is Barolo, so I should have find a way to build a new vector which take Barolo as output for this row. A function could be build, but after many trials, I just gave up because of the time. Thus, no solution have been found so far. I tried to build a function to create a new vector, but apparently something is going wrong.
+
+trial <- function(x, y, z){
+  if (x == 1){
+    return(1)
+  } else if (y == 1){
+    return(2)
+  } else {
+    return(3)}
+}
+
+wine_boostpredict_m$max <- trial(wine_boostpredict_m$Barbera.5000, wine_boostpredict_m$Barolo.5000, wine_boostpredict_m$Grignolino.5000) #does not work properly
+
+#confusion matrix which results on an error because of the unresolved problem
+#confusionMatrix(as.factor(wine_boostpredict), italianwines_test$wine)
+```
+From this new method, be can see that proline, and then flavanoids followed by colour have the best influence on the classification accuracy of the model. Once again, it fits the previous results we found. 
+
+```{r}
+#compare to a simple lda regression in terms of classification accuracy
+wine_lda <- lda(wine ~ ., data = italianwines_train)
+wine_lda
+
+predict_lda <- predict(wine_lda, italianwines_test, type = "class")
+confusionMatrix(as.factor(predict_lda$class), as.factor(italianwines_test$wine))
+```
+Finally, we can conclude that the trees models are not better than a linear discriminant analysis model in terms of classification accuracy (which increases to 92% with a lda model).
+
+1b.Attempt to predict the vintage of Barolo in the data set, using the physical properties. Choose two methods only, and compare them. 
+```{r}
+#load again the datafile (because I removed the critical vector on the first place)
+italianwines2 <- read.csv("italianwines.csv")
+
+#keep only Barolo wine
+italianwines2 <-
+  subset(italianwines2, wine == "Barolo")
+
+#and remove the vector "wine" from the datafile (since it only contains Barolo wines)
+italianwines2$wine <- NULL
+
+#keep only the two last digits for the first vector (to get the year)
+italianwines2$X <- substr(italianwines2$X, 6, 7)
+
+#make it as factor
+italianwines2$X <- as.factor(italianwines2$X)
+
+#rename the variable
+colnames(italianwines2)[colnames(italianwines2)=="X"] <- "vintage"
+
+#set seed and subset as train and test datasets
+set.seed(22)
+italianwines2_train <- sample_frac(italianwines2, 0.5)
+italianwines2_test <- setdiff(italianwines2, italianwines2_train)
+```
+
+Now, use the bagging method and the randomForest one ont vintage prediction
+```{r}
+#bagging
+set.seed(2)
+wine.bagg2 <- randomForest(vintage ~ ., 
+                          mtry = 27, importance = TRUE, #number of variables (excluded vintage)
+                          ntree = 5000, data = italianwines2_train)
+
+baggpredict2 <- predict(wine.bagg2, newdata = italianwines2_test)
+confusionMatrix(baggpredict2, italianwines2_test$vintage)
+
+importance(wine.bagg2)
+varImpPlot(wine.bagg2)
+
+#randomForest
+wine.rf2 <- randomForest(vintage ~ .,
+                        mtry = 27, importance = TRUE,
+                        data = italianwines2_train)
+
+wine.rf.predict2 <- predict(wine.rf2, newdata = italianwines2_test)
+confusionMatrix(wine.rf.predict2, italianwines2_test$vintage)
+```
+The two models are quite similar classficiation rate accuracy (bagging = 48% and random forest = 41%) event if the first one is better. Also, we can see that colou and alcohol are the most discriminant features. The best prediction method is then the bagging.
+
+2. Attempt to predict the quality of Portuguese wines from their physical properties. Use a variety of regression methods in order to do so, but especially regression trees, bagged trees, random forests, and boosted trees. Report an appropriate comparison. 
+```{r}
+#load the portuguese wine dataset
+portoswines <- read_excel("Wine_data.xlsx")
+
+#turn quality into factor
+portoswines$quality <- as.factor(portoswines$quality)
+
+#clean the vectors names
+portoswines <- data.frame(portoswines_test)
+
+#set seed and split
+set.seed(24)
+portoswines_train <- sample_frac(portoswines, 0.5)
+portoswines_test <- setdiff(portoswines, portoswines_train)
+
+```
+
+First try with a tree classification
+```{r}
+qual_tree = tree(quality ~ ., data = portoswines_train)
+plot(qual_tree)                                        
+text(qual_tree, pretty = 1) 
+
+summary(qual_tree)
+```
+According to this first classification, we can see that it is complexe, and the error rate quite high (.34). We may consider to prune the tree in order to reduce overfitting.
+
+```{r}
+#use cross-validation to find the alpha
+cv_qual_tree <- cv.tree(qual_tree)
+plot(cv_qual_tree$size, cv_qual_tree$dev, type = "b")
+
+#Since there is no obvious results, we try to find an average, and choose 10
+#prune tree on the basis of 10 branches
+prune_qual_tree = prune.tree(qual_tree, best = 10)
+plot(prune_qual_tree)
+text(prune_qual_tree, pretty = 1)
+
+#get the numerical outpul
+summary(prune_qual_tree)
+```
+Pruning the tree reduce overfitting, however the misclassification error rate also increases (which is completely expected though).
+
+```{r}
+#Because it is not satisfying, we can use the bagging method
+set.seed(24)
+qual_bagg <- randomForest(quality ~ ., 
+                          mtry = 11, importance = TRUE, #number of variables excluded quality
+                          ntree = 5000, data = portoswines_train)
+
+qual_baggpredict <- predict(qual_bagg, newdata = portoswines_test)
+confusionMatrix(qual_baggpredict, portoswines_test$quality)
+```
+With this method, we obtain an accuracy classification of 49%. We can observe that the scores are concentrated between 5 and 7 and the confusion seems to be in these rates, which is also corroborated from the snesitivity/specificity table.
+
+```{r}
+importance(qual_bagg)
+varImpPlot(qual_bagg)
+```
+However, we can also observe that predictors of quality, meaning the more discriminant features to predict quality rating are alcohol and volatile.acidity.
+
+```{r}
+#attempt a randomforest classification now
+qual_rf <- randomForest(quality ~ .,
+                        mtry = 11, importance = TRUE,
+                        data = portoswines_train)
+
+qual_rfpredict <- predict(qual_rf, newdata = portoswines_test)
+confusionMatrix(qual_rfpredict, portoswines_test$quality)
+```
+Results are almost identical to the ones with the bagging method, resulting in the same classification rate of 48%. This model is though, not better.
+
+```{r}
+#attempt a boosting method now
+qual_boost <- gbm(quality ~ .,
+                  data = portoswines_train, distribution = "multinomial", #multinomial because the output is > 2
+                  n.tree = 5000, interaction.depth = 2) #2 is to autorize 2-ways interactions
+summary(qual_boost)
+
+qual_boostpredict <- predict(qual_boost, newdata = portoswines_test, n.trees = 5000, type = "response")
+
+#since we have the same problem as before with the predict output, we cannot build a confusionMatrix
+#confusionMatrix(qual_boostpredict, portoswines_test$quality)
+```
+In this model we can see the same patterns, meaning that alcohol and volatile.acidity are the most discriminant feature to rate quality, followed by chlorides. The less important is then citric.acid. 
+
+```{r}
+#last step, compare with a lda model
+qual_lda <- lda(quality ~ ., data = portoswines_train)
+qual_lda
+
+predict_lda2 <- predict(qual_lda, portoswines_test, type = "class")
+confusionMatrix(as.factor(predict_lda2$class), as.factor(portoswines_test$quality))
+```
+Once again, the lda model results on more accurate classification than the tree models (taking intro account that we cannot see the boosting results because of the confusionMatrix), with an increase to 52% of classification rate. The results contained on the confusion matrix itself are also quite obvious, the ovelapping seems to be reduced especially for 6 rates. 

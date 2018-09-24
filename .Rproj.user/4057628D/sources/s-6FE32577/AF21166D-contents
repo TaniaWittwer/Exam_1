@@ -8,14 +8,14 @@ output:
 
 ##Preliminary steps
 #Load packages
-```{r}
+```{r, mysize = TRUE, size="\\scriptsize"}
 install.packages("pacman")
 library(pacman)
-p_load(tidyverse, haven, tufte, knitr, magrittr, psych, stats, caret, fmsb, DHARMa)
+p_load(tidyverse, haven, tufte, knitr, magrittr, psych, stats, caret, fmsb, DHARMa, boot, broom, tree)
 ```
 
 #Load datafiles
-```{r}
+```{r, mysize = TRUE, size="\\scriptsize"}
 delinquency <- read_spss("Cambridge_delinquency_with_caseid.sav")
 conviction <- read_spss("conviction_data.sav")
 ```
@@ -27,14 +27,14 @@ Donald West and David Farrington collected data of 411 British boys/men of worki
 ##QUESTION 1
 According to the question, we need to select variables which could be "early predictors of criminality". Therefore, I have only choosen variables collected before 10 years old, according the what have been found previously by Krohn (2006) and Kazemian (2011).
 Thus, chosen variables as potential predictors are the following (name from the Codebook, with number of the variable): conduct disorder of boy (53), discipline quality of father (62) and mother (63), family size (69), housing - care of interior (83), inconsistency in disagreement between parents (89), interest in education by parents (91), job record of father (96), nervousness of boy (104), number of friends of boy (105), outgoing or withdrawn boy (117), paternal attitude (118), progressive matrices IQ (119), physical neglect of boy (123), peer rating popularity (125), sibling disturbance (137), socioeconomic status of family (138), teacher rating: poor attendance (155)
-```{r}
+```{r, mysize = TRUE, size="\\scriptsize"}
 predictors_1 <- 
   delinquency %>% 
   select(v4, v53, v62, v63, v69, v83, v89, v91, v96, v104, v105, v117, v118, v119, v123, v125, v137, v138, v155)
 
 predictor_1 <- rename(predictors_1, id = v4, conduct = v53, disc_dad = v62, disc_mum = v63, familysize = v69, housecare = v83, betw_parents = v89, educ_interest = v91, job_dad = v96, nervousness = v104, friends = v105, withdrawn = v117, attitude_dad = v118, iq = v119, phys_neglect = v123, popularity = v125, sibl_disturb = v137, socioeco_fam = v138, attendance = v155)
 
-#Give labels to variables for clarity
+#Give labels to variables for clarity in tables
 predictor_1$conduct <- factor(predictor_1$conduct,
                               levels = c(0,1,2,3),
                               labels = c("unknown", "well", "moderatebad", "verybadly"))
@@ -91,8 +91,8 @@ predictor_1$attendance <- factor(predictor_1$attendance,
                               labels = c("unknown", "satisfactory", "truance_abstsm"))
 ```
 
-In addition, variables on conviction were first selected to create a dichotomous binary variable: convicted vs non-convicted (without taking into account neither the age of conviction(s), nor the number of conviction)
-```{r}
+In addition, variables on conviction were selected to create a dichotomous binary variable: convicted vs non-convicted (without taking into account neither the age of conviction(s), nor the number of conviction)
+```{r, mysize = TRUE, size="\\scriptsize"}
 #rename to avoid 'variable not found' problem
 conviction <- rename(conviction, id = icpsr_seq_id_number)
 
@@ -124,7 +124,7 @@ conviction_merge$convicted <- factor(conviction_merge$convicted,
 ```
 
 Variable were then merged together in one file
-```{r}
+```{r, mysize = TRUE, size="\\scriptsize"}
 #transform id as factor in the predictor datafile
 predictor_1$id <- as.factor(predictor_1$id)
 
@@ -137,7 +137,7 @@ conviction_full <- left_join(predictor_1, conviction_merge, by = "id")
 Report several (but not too many!) graphs and tables – choose these prudently, and discuss each graph or table you include.  
 
 Because I selected numerous potential predictors, a first look is necessary to know what is worth exploring further. Furthermore, bearing in mind that the variable convicted "as_juvenile" will be used as IV, according to the questions which is found early predictors (so, for ore accuracy, only juvenile delinguency will be used. This can be discussed, also because I could have taken the 10-13yo delinquency also, but not adult delinquency since so many other variables could be predictors. But there is not point to argue about that here.)
-```{r}
+```{r, mysize = TRUE, size="\\scriptsize"}
 #transform id variable as numeric
 conviction_full$id <- as.numeric(conviction_full$id)
 
@@ -148,8 +148,8 @@ table(conviction_full$as_juvenile)
 
 
 
-```{r}
-#all variables have been explored, however only the most relevant (the one which will be included in the prediction model) will appear here
+```{r, mysize = TRUE, size="\\scriptsize"}
+#all variables have been explored, however only the most relevant (the one which will be included in the prediction model) will appear here 
 ggplot(data = conviction_full, aes(x = as_juvenile))+
   geom_bar(aes(y = ..prop.., group = 2))+
   facet_wrap(~disc_dad)
@@ -170,7 +170,8 @@ ggplot(data = conviction_full, aes(x = as_juvenile))+
   geom_bar(aes(y = ..prop.., group = 2))+
   facet_wrap(~iq)
 
-table(conviction_full$as_juvenile, conviction_full$friends)
+tidy(table(conviction_full$as_juvenile, conviction_full$friends))
+#the results are less readible with a tidy table
 table(conviction_full$as_juvenile, conviction_full$withdrawn)
 table(conviction_full$as_juvenile, conviction_full$attitude_dad)
 table(conviction_full$as_juvenile, conviction_full$iq)
@@ -178,10 +179,10 @@ table(conviction_full$as_juvenile, conviction_full$popularity)
 table(conviction_full$as_juvenile, conviction_full$attendance)
 ```
 
-I tried many ways, and I really do not know how to explore this dataset in a meaningful way. I wanted to do frequency tables (not one by one), some t-test and descriptive data, but after many (too much) hours for nothing, I gave up. I will then just admit on some non-scientific non-related graphs and tables that the variables presented here are the one I kept, without further explanations.
+I tried many ways, and I really do not know how to explore this dataset in a meaningful way. I wanted to do frequency tables (not one by one), some t-test and descriptive data, but after many (too much) hours for nothing, I gave up. I will then just admit on some non-scientific non-related graphs and tables that the variables presented here are the one I kept, without further explanations. Also, sorry, but I did spend time on beautiful graphs with axis and title names, and beautiful tables because is is useless to report them without any interpretation and I do not want to spend time on that to have only one or two more mark.
 
 
-```{r}
+```{r, mysize = TRUE, size="\\scriptsize"}
 #create the final dataset for the predictor model
 final_delinquency <-
   conviction_full %>% 
@@ -197,8 +198,7 @@ pairs.panels(final_delinquency, stars = TRUE)
 It seems to have interesting correlations between delinquency and mum discipline, familysize, job of the father, attitude of the father, and intelligence coefficient. Then, discipline of the father and the mother are also correlated, which could be enter in the model as an interaction (and makes sense). The number of friends is correlated with the withdrawn, which could also be add as an interaction though. 
 
 ##QUESTION 3
-construct a statistical model, or even more than one model if you wish.  Interpret your model(s).  Write a function to assess the predictive accuracy of your model(s), test it, and apply it to your data 
-```{r}
+```{r, mysize = TRUE, size="\\scriptsize"}
 #set seed and split for the model
 set.seed(23)
 delinquency_train <- sample_frac(final_delinquency, .50)
@@ -208,11 +208,12 @@ delinquency_test <- setdiff(final_delinquency, delinquency_train)
 delinquency_train$as_juvenile <- as.factor(delinquency_train$as_juvenile)
 delinquency_test$as_juvenile <- as.factor(delinquency_test$as_juvenile)
 
+#remove missing data
 delinquency_test = na.omit(delinquency_test)
 ```
 
 Because we have a binomial variable to predict, let's use a logistic regression.
-```{r}
+```{r, mysize = TRUE, size="\\scriptsize"}
 #try a linear model with simple effects
 model1 <- glm(as_juvenile ~ disc_dad + disc_mum + familysize + job_dad + friends + withdrawn + attitude_dad + iq + popularity + attendance, data = delinquency_train, family = "binomial")
 summary(model1)
@@ -221,11 +222,15 @@ summary(model1)
 NagelkerkeR2(model1)
 exp(coef(model1))
 
+#find the classification accuracy of the model
 predict1 <- predict(model1, newdata = delinquency_test)
 #confusionMatrix(predict1, delinquency_test$as_juvenile)
-#this confusionMatrix command has a problem resulting on "error: 'data' and 'reference' should be factors with the same levels", again. I do not understand why, because everything is similar in both of my train and test subsets when I check the structure, etc. I made numerous research on the Internet, without any success. Thus, I gave up, again.
 
+```
+The confusionMatrix command has a problem resulting on "error: 'data' and 'reference' should be factors with the same levels", again. I do not understand why, because everything is similar in both of my train and test subsets when I check the structure, etc. I made numerous research on the Internet, without any success. I will therefore miss the classification accuracy rate, sensitivity and specificity. Thus, I gave up, again. However, I cannot interpret my model more that just saying that only the size of the family and the number of friends before 10 years old seem to predict the juvenile delinquency. The fit of the model is however not so bad with a R2 = .23. I do not know how to interpret the odds ratio clarely, but it seems to be something like: the probability to commit a delictual event (= the probability to go from 1 to 2) increases of 0.70 each time we pass from one value to another on discipline of the father... That does not make sense, especially because all the data in this file are categorical. 
 
+However, I will try to improve this model including interactions
+```{r, mysize = TRUE, size="\\scriptsize"}
 #try a second model adding interactions
 model2 <- glm(as_juvenile ~ disc_dad*disc_mum + familysize + job_dad + friends*withdrawn + attitude_dad + iq + popularity + attendance, data = delinquency_train, family = "binomial")
 summary(model2)
@@ -235,20 +240,37 @@ exp(coef(model2))
 
 predict2 <- predict(model2, newdata = delinquency_test)
 #confusionMatrix(predict2, delinquency_test$as_juvenile)
-#same problem. Because of that, I cannot really interpret (absence of the classification accuracy, sensitivity and sensibility)
 ```
 
+I do have the same problem with the confusionMatrix, which make harder the comparison of my two models. However, I can already observe that there are more significant factors in this model () and the model fits well the dataset, even a little bit less (R2 = 28). The odds ratio are a lot higher, but once again, I do not know how to interpret. 
+
+It does make sense (to me) to try another model, as a classification model (three), because all of our predictors are categorical variables, meaning that the difference between 1, 2,3, etc is not a constant value. So let's try that.
+```{r, mysize = TRUE, size="\\scriptsize"}
+#create and plot the tree model
+delinquency_tree = tree(as_juvenile ~ ., data = delinquency_train)
+plot(delinquency_tree)                                      
+text(delinquency_tree, pretty = 1)
+
+#explore the model
+summary(delinquency_tree)
+```
+
+We can see that this model is quite interesting. With a quite low error rate (14%), we can see that the most discriminant factor (predictor) is familysize, which similar to the importance it has on the logistic regression model. However, I do not think this model is really relevant neither in our case, especially because all the output expect one is 1 (= no delinquency). 
+
+We may try something else, using cross-validation to find an alpha and use it to prune the tree
 ```{r}
-#some plot for train and test
-plot(simulateResiduals(model1))
-#x <- predict(model7, data.frame(lineupacc = 1), type = "response")
-#odds <- mean(x/(1-x))
-#print(odds)
-
+cv_delinquency_tree <- cv.tree(delinquency_tree)
+plot(cv_delinquency_tree$size, cv_delinquency_tree$dev, type = "b")
 ```
-
-
+According to this graph, I decided to keep only 5
 ```{r}
-#use cross validatio 
-```
+prune_delinquency_tree = prune.tree(delinquency_tree, best = 5)
+plot(prune_delinquency_tree)
+text(prune_delinquency_tree, pretty = 1)
 
+summary(prune_delinquency_tree)
+```
+From this new classification, we have an identical misclassification error rate (14%) and this models is not really relevant neither. The idea here could be: the more your family is big, your popularity low before 10 years old, the discipline of your dad "average" before 10 years old and your IQ low before 10 years old, the more likely you will "be a delinquent" as juvenile.
+
+#conclusion
+It is hard to conclude here. Firstly, because I have not succeed on the assignement (no confusionMatrix, not enough knowledge on how to choose a model, not enough reflexion and knowledge on potential cross-validation/bootstapping/assumptions/step to follow/etc). Secondly, because the dataset is huge, and I honestly do not know if I had to predict conviction in whole life, as juvenile, as adult, etc. as well as if I have to keep avery step data of only before a certain age as I did, according to this "early" predictor instruction. I have probably made bad choices, I apologise. However, we can say that it should be possible (and researchers did it, with all my respect) to predict such a behavior with some well picked variables. There is definitely something interesting to say about this dataset, and the best model I constructed is the second logistic regression, with the interactions. 

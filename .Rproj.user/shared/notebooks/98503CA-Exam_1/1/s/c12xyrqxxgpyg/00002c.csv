@@ -1,4 +1,0 @@
-"0","#all variables have been explored, however only the most relevant (the one which will be included in the prediction model) will appear here"
-"0","ggplot(data = conviction_full, aes(x = as_juvenile))+"
-"0","  geom_bar(aes(y = ..prop.., group = 2))+"
-"0","  facet_wrap(~disc_dad)"

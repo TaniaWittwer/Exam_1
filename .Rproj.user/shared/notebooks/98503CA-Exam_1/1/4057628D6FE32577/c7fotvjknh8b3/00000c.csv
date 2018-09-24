@@ -1,0 +1,43 @@
+"0","delinquency_tree = tree(as_juvenile ~ ., data = delinquency_train)
+plot(delinquency_tree)                                      
+text(delinquency_tree, pretty = 1)
+#explore the model
+summary(delinquency_tree)
+"
+"1","
+Classification tree:
+"
+"1","tree(formula = as_juvenile ~ ., data = delinquency_train)
+"
+"1","Variables actually used in tree construction:
+"
+"1","[1]"
+"1"," ""familysize""  "
+"1"," ""popularity""  "
+"1"," ""friends""     "
+"1"," ""iq""          "
+"1"," ""disc_dad""    "
+"1","
+"
+"1","[6]"
+"1"," ""attitude_dad"""
+"1","
+"
+"1","Number of terminal nodes:  12 
+"
+"1","Residual mean deviance:  0.583 = 85.12 / 146 
+"
+"1","Misclassification error rate:"
+"1"," "
+"1","0.1456"
+"1"," "
+"1","="
+"1"," "
+"1","23"
+"1"," "
+"1","/"
+"1"," "
+"1","158"
+"1"," "
+"1","
+"

@@ -1,0 +1,3 @@
+"0","#create and plot the tree model"
+"0","delinquency_tree = tree(as_juvenile ~ ., data = delinquency_train)"
+"0","plot(delinquency_tree)                                      "

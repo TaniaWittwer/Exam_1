@@ -5,4 +5,5 @@
 "0","#convert id into factor"
 "0","delinquency_train$as_juvenile <- as.factor(delinquency_train$as_juvenile)"
 "0","delinquency_test$as_juvenile <- as.factor(delinquency_test$as_juvenile)"
-"0","#delinquency_test = na.omit(delinquency_test)"
+"0","#remove missing data"
+"0","delinquency_test = na.omit(delinquency_test)"

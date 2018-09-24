@@ -1,0 +1,8 @@
+"0","ggplot(data = conviction_full, aes(x = iq))+"
+"0","  geom_bar(aes(y = ..prop.., group = 2))+"
+"0","  facet_wrap(~as_juvenile)+"
+"0","  theme_bw()+"
+"0","  labs(title = ""Figure 5"
+"0","       Repartition of the IQ score range according to juvenile child conviction"","
+"0","       x = ""IQ score range"","
+"0","       y = ""Proportion of child (%)"")"

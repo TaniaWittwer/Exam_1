@@ -1,0 +1,1 @@
+"0","kable(table(conviction_full$as_juvenile, conviction_full$friends), caption = 'Table 1. Count of friends categories in each conviction case')"

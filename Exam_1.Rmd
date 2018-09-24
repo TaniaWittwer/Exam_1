@@ -2,16 +2,16 @@
 title: "Delinquence early predictor - longitudinal study"
 author: "Tania Wittwer"
 output:
-  tufte::tufte_handout: default
   tufte::tufte_html: default
+  tufte::tufte_handout: default
 ---
 
 ##Preliminary steps
 #Load packages
 ```{r, mysize = TRUE, size="\\scriptsize"}
-install.packages("pacman")
+#install.packages("pacman")
 library(pacman)
-p_load(tidyverse, haven, tufte, knitr, magrittr, psych, stats, caret, fmsb, DHARMa, boot, broom)
+p_load(tidyverse, haven, tufte, knitr, magrittr, psych, stats, caret, fmsb, DHARMa, boot, broom, tree)
 ```
 
 #Load datafiles
@@ -142,44 +142,69 @@ Because I selected numerous potential predictors, a first look is necessary to k
 conviction_full$id <- as.numeric(conviction_full$id)
 
 #have a look to the deliquency rate
+conviction_full$as_juvenile <- factor(conviction_full$as_juvenile,
+                              levels = c(1,2),
+                              labels = c("Never", "At least once"))
 table(conviction_full$as_juvenile)
-#result is 327 (80%) of non delinquent and 84 (20%) delinguent in our sample
 ```
+Result is 327 (80%) of non delinquent and 84 (20%) delinquent in our sample
 
 
-
-```{r, mysize = TRUE, size="\\scriptsize"}
-#all variables have been explored, however only the most relevant (the one which will be included in the prediction model) will appear here 
-ggplot(data = conviction_full, aes(x = as_juvenile))+
+```{r, mysize = TRUE, size="\\scriptsize", fig.margin = TRUE}
+#some descriptive/explorative data
+ggplot(data = conviction_full, aes(x = as.factor(disc_dad)))+
   geom_bar(aes(y = ..prop.., group = 2))+
-  facet_wrap(~disc_dad)
+  facet_wrap(~as_juvenile)+
+  theme_bw()+
+  labs(title = "Figure 1
+       Repartition of the father's discipline type according to juvenile child conviction",
+       x = "Father's discipline type",
+       y = "Proportion of child (%)")
 
-ggplot(data = conviction_full, aes(x = as_juvenile))+
+ggplot(data = conviction_full, aes(x = disc_mum))+
   geom_bar(aes(y = ..prop.., group = 2))+
-  facet_wrap(~disc_mum)
+  facet_wrap(~as_juvenile)+
+  theme_bw()+
+  labs(title = "Figure 2
+       Repartition of the mother's discipline type according to juvenile child conviction",
+       x = "Mother's discipline type",
+       y = "Proportion of child (%)")
 
-ggplot(data = conviction_full, aes(x = as_juvenile))+
+ggplot(data = conviction_full, aes(x = familysize))+
   geom_bar(aes(y = ..prop.., group = 2))+
-  facet_wrap(~familysize)
+  facet_wrap(~as_juvenile)+
+  theme_bw()+
+  labs(title = "Figure 3
+       Repartition of the family size according to juvenile child conviction",
+       x = "Family size",
+       y = "Proportion of child (%)")
 
-ggplot(data = conviction_full, aes(x = as_juvenile))+
+ggplot(data = conviction_full, aes(x = job_dad))+
   geom_bar(aes(y = ..prop.., group = 2))+
-  facet_wrap(~job_dad)
+  facet_wrap(~as_juvenile)+
+  theme_bw()+
+  labs(title = "Figure 4
+       Repartition of the father's job statute according to juvenile child conviction",
+       x = "Father's job statute",
+       y = "Proportion of child (%)")
 
-ggplot(data = conviction_full, aes(x = as_juvenile))+
+ggplot(data = conviction_full, aes(x = iq))+
   geom_bar(aes(y = ..prop.., group = 2))+
-  facet_wrap(~iq)
+  facet_wrap(~as_juvenile)+
+  theme_bw()+
+  labs(title = "Figure 5
+       Repartition of the IQ score range according to juvenile child conviction",
+       x = "IQ score range",
+       y = "Proportion of child (%)")
 
-tidy(table(conviction_full$as_juvenile, conviction_full$friends))
-#the results are less readible with a tidy table
-table(conviction_full$as_juvenile, conviction_full$withdrawn)
-table(conviction_full$as_juvenile, conviction_full$attitude_dad)
-table(conviction_full$as_juvenile, conviction_full$iq)
-table(conviction_full$as_juvenile, conviction_full$popularity)
-table(conviction_full$as_juvenile, conviction_full$attendance)
+kable(table(conviction_full$as_juvenile, conviction_full$friends), caption = 'Table 1. Count of friends categories in each conviction case')
+kable(table(conviction_full$as_juvenile, conviction_full$withdrawn), caption = 'Table 2. Count of withdrawn condition in each conviction case')
+kable(table(conviction_full$as_juvenile, conviction_full$attitude_dad), caption = 'Table 3. Count of attitude of the father in each conviction case')
+kable(table(conviction_full$as_juvenile, conviction_full$iq), caption = 'Table 4. Count of IQ categories in each conviction case')
+kable(table(conviction_full$as_juvenile, conviction_full$popularity), caption = 'Table 5. Count of popularity categories in each conviction case')
+kable(table(conviction_full$as_juvenile, conviction_full$attendance), caption = 'Table 6. Count of attendance categories in each conviction case')
 ```
-
-I tried many ways, and I really do not know how to explore this dataset in a meaningful way. I wanted to do frequency tables (not one by one), some t-test and descriptive data, but after many (too much) hours for nothing, I gave up. I will then just admit on some non-scientific non-related graphs and tables that the variables presented here are the one I kept, without further explanations. Also, sorry, but I did spend time on beautiful graphs with axis and title names, and beautiful tables because is is useless to report them without any interpretation and I do not want to spend time on that to have only one or two more mark.
+From this first exploration, we can already guess that both family size and IQ should have a good prediction on the child conviction. Indeed, there is a crossed pattern in both cases, resulting on a bigger family (Figure 3) as well as a lower IQ score (Figure 5) for convicted that not convicted child. However, there is a higher proportion of bad discipline (especially harsh) in father's and mother's discipline (Figure 1 and 2), which should results on a correlation in these two variable, and on a potential (but low) prediction. Finally, the job of the father is rated more flucuent for convicted childs, which could also be a predictor (Figure 4). According to the frequency table, we should expect a prediction of the number of friends as well. The other predictors are not that clear. 
 
 
 ```{r, mysize = TRUE, size="\\scriptsize"}
@@ -195,7 +220,7 @@ final_delinquency <- data.frame(lapply(final_delinquency, function(x) as.numeric
 pairs.panels(final_delinquency, stars = TRUE)
 ```
 
-It seems to have interesting correlations between delinquency and mum discipline, familysize, job of the father, attitude of the father, and intelligence coefficient. Then, discipline of the father and the mother are also correlated, which could be enter in the model as an interaction (and makes sense). The number of friends is correlated with the withdrawn, which could also be add as an interaction though. 
+It seems to have interesting correlations between delinquency and mum discipline (as expected), familysize, job of the father, attitude of the father, and intelligence coefficient. Then, discipline of the father and the mother are also correlated, which could be enter in the model as an interaction (and makes sense). The number of friends is correlated with the withdrawn, which could also be add as an interaction though. 
 
 ##QUESTION 3
 ```{r, mysize = TRUE, size="\\scriptsize"}
@@ -227,7 +252,9 @@ predict1 <- predict(model1, newdata = delinquency_test)
 #confusionMatrix(predict1, delinquency_test$as_juvenile)
 
 ```
-The confusionMatrix command has a problem resulting on "error: 'data' and 'reference' should be factors with the same levels", again. I do not understand why, because everything is similar in both of my train and test subsets when I check the structure, etc. I made numerous research on the Internet, without any success. I will therefore miss the classification accuracy rate, sensitivity and specificity. Thus, I gave up, again. However, I cannot interpret my model more that just saying that only the size of the family and the number of friends before 10 years old seem to predict the juvenile delinquency. The fit of the model is however not so bad with a R2 = .23. I do not know how to interpret the odds ratio clarely, but it seems to be something like: the probability to commit a delictual event (= the probability to go from 1 to 2) increases of 0.70 each time we pass from one value to another on discipline of the father... That does not make sense, especially because all the data in this file are categorical. 
+The confusionMatrix command has a problem resulting on "error: 'data' and 'reference' should be factors with the same levels", again. I do not understand why, because everything is similar in both of my train and test subsets when I check the structure, etc. I made numerous research on the Internet, without any success. I will therefore miss the classification accuracy rate, sensitivity and specificity. Thus, I gave up, again. 
+
+However, I cannot interpret my model more that just saying that only the size of the family and the number of friends before 10 years old seem to predict the juvenile delinquency, which was expected according to the data exploration. The fit of the model is however not so bad with a R2 = .23. I do not know how to interpret the odds ratio clarely, but it seems to be something like: the probability to commit a delictual event (= the probability to go from 1 to 2) increases of 0.70 each time we pass from one value to another on discipline of the father... That does not make sense, especially because all the data in this file are categorical. 
 
 However, I will try to improve this model including interactions
 ```{r, mysize = TRUE, size="\\scriptsize"}
@@ -242,10 +269,39 @@ predict2 <- predict(model2, newdata = delinquency_test)
 #confusionMatrix(predict2, delinquency_test$as_juvenile)
 ```
 
-I do have the same problem with the confusionMatrix, which make harder the comparison of my two models. However, I can already observe that there are more significant factors in this model () and the model fits well the dataset, even a little bit less (R2 = 28). The odds ratio are a lot higher, but once again, I do not know how to interpret. 
+I do have the same problem with the confusionMatrix, which make harder the comparison of my two models. However, I can already observe that there are more significant factors in this model () and the model fits well the dataset, even a little bit less (R2 = 28). The odds ratio are a lot higher, but once again, I do not know how to interpret. The expected predictor are not always present, especially the IQ which showed a quite high distinctiveness between both child conviction statutes. However, withdraws was not especially expected to have an effect, but seems to have one.
 
 It does make sense (to me) to try another model, as a classification model (three), because all of our predictors are categorical variables, meaning that the difference between 1, 2,3, etc is not a constant value. So let's try that.
-```{r, mysize = TRUE, size="\\scriptsize"}
+```{r, mysize = TRUE, size="\\scriptsize", fig.margin = TRUE}
+#create and plot the tree model
+delinquency_tree = tree(as_juvenile ~ ., data = delinquency_train)
+plot(delinquency_tree)                                      
+text(delinquency_tree, pretty = 1)
 
+#explore the model
+summary(delinquency_tree)
 ```
 
+We can see that this model is quite interesting. With a quite low error rate (14%), we can see that the most discriminant factor (predictor) is familysize, which similar to the importance it has on the logistic regression model. However, I do not think this model is really relevant neither in our case, especially because all the output expect one is 1 (= no delinquency). 
+
+We may try something else, using cross-validation to find an alpha and use it to prune the tree
+```{r, mysize = TRUE, size="\\scriptsize", fig.margin = TRUE}
+cv_delinquency_tree <- cv.tree(delinquency_tree)
+plot(cv_delinquency_tree$size, cv_delinquency_tree$dev, type = "b")
+```
+According to this graph, I decided to keep only 5
+```{r, mysize = TRUE, size="\\scriptsize", fig.margin = TRUE}
+prune_delinquency_tree = prune.tree(delinquency_tree, best = 5)
+plot(prune_delinquency_tree)
+text(prune_delinquency_tree, pretty = 1)
+
+summary(prune_delinquency_tree)
+```
+From this new classification, we have an identical misclassification error rate (14%) and this models is not really relevant neither. The idea here could be: the more your family is big, your popularity low before 10 years old, the discipline of your dad "average" before 10 years old and your IQ low before 10 years old, the more likely you will "be a delinquent" as juvenile.
+Finally, this tree model is absolutely not a good choice for our dataset. The regression model showed better results, and is theoriticaly more relevant to use. This tree step may have been completely useless.
+
+#Conclusion
+It is hard to conclude here. Firstly, because I have not succeed on the assignement (no confusionMatrix, not enough knowledge on how to choose a model, not enough reflexion and knowledge on potential cross-validation/bootstapping/assumptions/step to follow/etc). Secondly, because the dataset is huge, and I honestly do not know if I had to predict conviction in whole life, as juvenile, as adult, etc. as well as if I have to keep avery step data of only before a certain age as I did, according to this "early" predictor instruction. However, we can say that it should be possible (and researchers did it, with all my respect) to predict such a behavior with some well picked variables. There is definitely something interesting to say about this dataset, and the best model I constructed is the second logistic regression, with the interactions. 
+
+#Link to GitHub repository
+https://github.com/TaniaWittwer/Exam_1.git

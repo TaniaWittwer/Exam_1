@@ -1,0 +1,8 @@
+"0","ggplot(data = conviction_full, aes(x = disc_mum))+"
+"0","  geom_bar(aes(y = ..prop.., group = 2))+"
+"0","  facet_wrap(~as_juvenile)+"
+"0","  theme_bw()+"
+"0","  labs(title = ""Figure 2"
+"0","       Repartition of the mother's discipline type according to juvenile child conviction"","
+"0","       x = ""Mother's discipline type"","
+"0","       y = ""Proportion of child (%)"")"

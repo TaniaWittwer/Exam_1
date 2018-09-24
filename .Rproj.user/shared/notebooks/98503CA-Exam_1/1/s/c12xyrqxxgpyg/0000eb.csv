@@ -1,0 +1,1 @@
+"0","kable(table(conviction_full$as_juvenile, conviction_full$withdrawn), caption = 'Table 2. Count of withdrawn condition in each conviction case')"

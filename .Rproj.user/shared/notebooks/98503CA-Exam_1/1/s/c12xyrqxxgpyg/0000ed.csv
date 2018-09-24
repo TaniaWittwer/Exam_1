@@ -1,0 +1,1 @@
+"0","kable(table(conviction_full$as_juvenile, conviction_full$attitude_dad), caption = 'Table 3. Count of attitude of the father in each conviction case')"
